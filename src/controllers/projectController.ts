@@ -4,12 +4,21 @@ import axios from 'axios';
 
 export const createProject = async (req: Request, res: Response) => {
     try {
-        const project = new Project(req.body);
-        const savedproject = await project.save();
-        res.status(201).json(savedproject);
+        const { project_id, org_id, client_id, project_name, start_date, end_date, status,
+            total_budget, allocated_budget, remaining_budget, employee_budget,
+            technical_budget, additional_budget, actual_expenses, employees_list } = req.body;
+        const projectData = {
+            project_id, org_id, client_id, project_name, start_date, end_date, status,
+            total_budget, allocated_budget, remaining_budget, employee_budget,
+            technical_budget, additional_budget, actual_expenses, employees_list
+        };
+
+        const savedProject = await Project.create(projectData);
+
+        res.status(201).json(savedProject);
     }
     catch (error) {
-        res.status(500).json({ message: 'An unexpected error occurred' });
+        res.status(500).json({ message: 'An unexpected error occurred' + error });
     }
 };
 
@@ -19,15 +28,15 @@ export const getProjectById = async (req: Request, res: Response) => {
         if (!project) {
             res.status(404).json({ message: 'Project not found' });
         }
-        const response = await axios.get(`http://localhost:3000/api/employees/projects/${req.params.id}`);
-        if (project !== null) {
-            const employeeIds = response.data.map((employee: { employee_id: number }) => employee.employee_id);
-            project.employeesList = employeeIds;
-        }
+        // const response = await axios.get(`http://localhost:3000/api/employees/projects/${req.params.id}`);
+        // if (project !== null) {
+        //     const employeeIds = response.data.map((employee: { employee_id: number }) => employee.employee_id);
+        //     project.employees_list = employeeIds;
+        // }
         res.status(200).json(project);
     }
     catch (error) {
-        res.status(500).json({ message: 'An unexpected error occurred' });
+        res.status(500).json({ message: 'An unexpected error occurred' + error });
     }
 }
 
@@ -92,24 +101,33 @@ export const getProjectsByClientId = async (req: Request, res: Response) => {
 }
 
 export const updateProjectStatus = async (req: Request, res: Response) => {
-    const project = await Project.findOne({ project_id: req.params.project_id });
-    if (!project)
-        res.status(404).json({ message: "Project not found" });
-    if (project !== null) {
-        if (req.params.status === "completed") {
-            project.status = "completed";
-            project.employeesList.forEach(employeeId => {
-                const employee = axios.get(`http://localhost:3000/api/employees/projectCompleted/${employeeId}`);
-            });
+    try {
+        const project = await Project.findOne({ project_id: req.params.project_id });
+        if (!project)
+            res.status(404).json({ message: "Project not found" });
+        if (project !== null) {
+            if (req.params.status === "completed") {
+                project.status = "completed";
+                for (const employeeId of project.employees_list) {
+                    console.log(employeeId);
+                    await axios.get(`http://localhost:3000/api/employees/projectCompleted/${employeeId}`);
+                }
+            }
+            else if (req.params.status === "ongoing") {
+                for (const employeeId of project.employees_list) {
+                    await axios.get(`http://localhost:3000/api/employees/assignProject/${employeeId}/${req.params.project_id}`);
+                }
+                project.status = "ongoing";
+            }
+            else {
+                project.status = req.params.status;
+            }
+            const updatedProject = await project.save();
+            res.status(200).json(updatedProject);
         }
-        else if (req.params.status === "ongoing") {
-            project.employeesList.forEach(employeeId => {
-                const employee = axios.get(`http://localhost:3000/api/employees/assignProject/${employeeId}`);
-            })
-        }
-        else {
-            project.status = req.params.status;
-        }
+    }
+    catch (error) {
+        res.status(500).json({ message: 'An unexpected error occurred', error: error });
     }
 }
 

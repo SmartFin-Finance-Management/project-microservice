@@ -109,7 +109,6 @@ export const updateProjectStatus = async (req: Request, res: Response) => {
             if (req.params.status === "completed") {
                 project.status = "completed";
                 for (const employeeId of project.employees_list) {
-                    console.log(employeeId);
                     await axios.get(`http://localhost:3000/api/employees/projectCompleted/${employeeId}`);
                 }
             }

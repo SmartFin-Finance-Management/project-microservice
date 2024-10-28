@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import Project from '../models/projectModel';
+import axios from 'axios';
 
 export const createProject = async (req: Request, res: Response) => {
     try {
@@ -18,7 +19,12 @@ export const getProjectById = async (req: Request, res: Response) => {
         if (!project) {
             res.status(404).json({ message: 'Project not found' });
         }
-        res.status(200).json(project)
+        const response = await axios.get(`http://localhost:3000/api/employees/projects/${req.params.id}`);
+        if (project !== null) {
+            const employeeIds = response.data.map((employee: { employee_id: number }) => employee.employee_id);
+            project.employeesList = employeeIds;
+        }
+        res.status(200).json(project);
     }
     catch (error) {
         res.status(500).json({ message: 'An unexpected error occurred' });
@@ -58,6 +64,52 @@ export const delteProject = async (req: Request, res: Response) => {
     }
     catch (error) {
         res.status(500).json({ message: 'An unexpected error occured' });
+    }
+}
+
+export const getProjectsByOrgId = async (req: Request, res: Response) => {
+    try {
+        const project = await Project.find({ org_id: req.params.org_id });
+        if (!project)
+            res.status(404).json({ message: "there is project with given id" });
+        res.status(200).json(project);
+    }
+    catch (error) {
+        res.status(500).json({ messsage: "An unexpected error occured" });
+    }
+}
+
+export const getProjectsByClientId = async (req: Request, res: Response) => {
+    try {
+        const project = await Project.find({ client_id: req.params.client_id });
+        if (!project)
+            res.status(404).json({ message: "there is project with given id" });
+        res.status(200).json(project);
+    }
+    catch (error) {
+        res.status(500).json({ messsage: "An unexpected error occured" });
+    }
+}
+
+export const updateProjectStatus = async (req: Request, res: Response) => {
+    const project = await Project.findOne({ project_id: req.params.project_id });
+    if (!project)
+        res.status(404).json({ message: "Project not found" });
+    if (project !== null) {
+        if (req.params.status === "completed") {
+            project.status = "completed";
+            project.employeesList.forEach(employeeId => {
+                const employee = axios.get(`http://localhost:3000/api/employees/projectCompleted/${employeeId}`);
+            });
+        }
+        else if (req.params.status === "ongoing") {
+            project.employeesList.forEach(employeeId => {
+                const employee = axios.get(`http://localhost:3000/api/employees/assignProject/${employeeId}`);
+            })
+        }
+        else {
+            project.status = req.params.status;
+        }
     }
 }
 

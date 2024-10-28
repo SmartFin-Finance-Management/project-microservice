@@ -16,11 +16,12 @@ interface IProject extends Document {
     technical_budget: number;
     additional_budget: number;
     actual_expenses: number;
+    employeesList: number[];
 }
 
 
 const projectSchema = new mongoose.Schema<IProject>({
-    project_id: { type: Number, required: true },
+    project_id: { type: Number, required: true, unique: true },
     org_id: { type: Number, required: true },
     client_id: { type: Number, required: true },
     project_name: { type: String, required: true },
@@ -33,7 +34,8 @@ const projectSchema = new mongoose.Schema<IProject>({
     employee_budget: { type: Number },
     technical_budget: { type: Number },
     additional_budget: { type: Number },
-    actual_expenses: { type: Number }
+    actual_expenses: { type: Number },
+    employeesList: { type: [Number], default: [] },
 });
 
 export default mongoose.model<IProject>('Project', projectSchema);

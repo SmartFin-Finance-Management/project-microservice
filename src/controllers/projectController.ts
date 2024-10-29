@@ -12,12 +12,21 @@ export const createProject = async (req: Request, res: Response) => {
 
         const remainingBudget = allocated_budget;
 
-        const diffInTime = end_date.getTime() - start_date.getTime(); // Difference in milliseconds
+        // Convert start_date and end_date to Date objects
+        const startDate = new Date(start_date);
+        const endDate = new Date(end_date);
+
+        // Calculate the difference in days
+        const diffInTime = endDate.getTime() - startDate.getTime();
         const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
-        const salary = await axios.post(`http://localhost:3000/api/employees/caluclateSalaries:${employees_list}`);
+
+        const salary = await axios.post('http://localhost:3000/api/employees/calculateSalaries', {
+            employees_list
+        });
         const employeeExpenses = salary.data.total_salary * diffInDays;
-        if (employee_budget > employeeExpenses) {
-            res.status(401).json({ error: "employee budget is exceeded" });
+        if (employee_budget < employeeExpenses) {
+            res.status(400).json({ error: "employee budget is exceeded" });
+            return;
         }
 
         const projectData = {

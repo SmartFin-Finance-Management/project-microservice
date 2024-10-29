@@ -7,7 +7,11 @@ import {
     delteProject,
     getProjectsByOrgId,
     getProjectsByClientId,
-    updateProjectStatus
+    updateProjectStatus,
+    setProjectBudget,
+    getProjectBudget,
+    addProjectExpense,
+    getProjectExpenses
 } from '../controllers/projectController';
 
 const router = Router();
@@ -20,6 +24,14 @@ router.delete('/projects/:id', delteProject);
 router.get('/projects/orgs/:org_id', getProjectsByOrgId);
 router.get('/projects/client/:client_id', getProjectsByClientId);
 router.put('/projects/:project_id/:status', updateProjectStatus);
+
+// Budget Management
+router.post('/projects/:project_id/budget', setProjectBudget);
+router.get('/projects/:project_id/budget', getProjectBudget);
+
+// Expense Management
+router.post('/projects/:project_id/expenses', addProjectExpense);
+router.get('/projects/:project_id/expenses', getProjectExpenses);
 
 export default router;
 

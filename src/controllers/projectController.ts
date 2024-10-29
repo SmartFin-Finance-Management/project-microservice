@@ -11,6 +11,9 @@ export const createProject = async (req: Request, res: Response) => {
             technical_expenses, additional_expenses, actual_expenses, employees_list } = req.body;
 
         const remainingBudget = allocated_budget;
+        if (allocated_budget < employee_budget + technical_budget + additional_budget) {
+            res.status(400).json({ error: "budget is exceeding the allocated budget" });
+        }
 
         // Convert start_date and end_date to Date objects
         const startDate = new Date(start_date);

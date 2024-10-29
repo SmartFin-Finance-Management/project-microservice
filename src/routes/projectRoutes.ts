@@ -11,7 +11,8 @@ import {
     setProjectBudget,
     getProjectBudget,
     addProjectExpense,
-    getProjectExpenses
+    getProjectExpenses,
+    getProfitLossReport
 } from '../controllers/projectController';
 
 const router = Router();
@@ -32,6 +33,9 @@ router.get('/projects/:project_id/budget', getProjectBudget);
 // Expense Management
 router.post('/projects/:project_id/expenses', addProjectExpense);
 router.get('/projects/:project_id/expenses', getProjectExpenses);
+
+// profit and loss
+router.get('/projects/:project_id/report/profitLoss', getProfitLossReport);
 
 export default router;
 

@@ -266,6 +266,65 @@ export const getProjectExpenses = async (req: Request, res: Response) => {
     }
 };
 
+// Generate profit/loss report
+export const getProfitLossReport = async (req: Request, res: Response) => {
+    const { project_id } = req.params;
+
+    try {
+        const project = await Project.findOne({ project_id });
+
+        if (!project) {
+            res.status(404).json({ message: 'Project not found' });
+            return;
+        }
+
+        const { allocated_budget, employee_expenses, technical_expenses, additional_expenses } = project;
+
+        // Calculate total expenses
+        const total_expenses = employee_expenses + technical_expenses + additional_expenses;
+        const profit_loss = allocated_budget - total_expenses;
+
+        res.status(200).json({
+            allocated_budget,
+            total_expenses,
+            profit_loss,
+            status: profit_loss >= 0 ? 'Profit' : 'Loss'
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'An error occurred while generating the profit/loss report.', error });
+    }
+};
 
 
+// Fetch monthly expenses by category
+export const getMonthlyExpenses = async (req: Request, res: Response) => {
+    const { project_id } = req.params;
+    const { month, year } = req.query;
+
+    try {
+        const expenses = await Project.findOne({ project_id });
+
+        if (!expenses) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+
+        // Here, you should have a mechanism to track and store monthly expenses.
+        const { employee_expenses, technical_expenses, additional_expenses } = expenses;
+
+        // Assuming you have a method to calculate monthly expenses
+        const monthlyBreakdown = {
+            employee: employee_expenses,   // Fetch and filter based on month/year
+            technical: technical_expenses, // Fetch and filter based on month/year
+            additional: additional_expenses // Fetch and filter based on month/year
+        };
+
+        res.status(200).json({
+            month,
+            year,
+            expenses: monthlyBreakdown
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'An error occurred while fetching monthly expenses.', error });
+    }
+};
 

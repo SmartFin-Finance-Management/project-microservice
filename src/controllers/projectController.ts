@@ -1,6 +1,7 @@
 import { Request, response, Response } from 'express';
 import Project from '../models/projectModel';
 import axios from 'axios';
+import { error } from 'console';
 
 export const createProject = async (req: Request, res: Response) => {
     try {
@@ -8,10 +9,21 @@ export const createProject = async (req: Request, res: Response) => {
             total_budget, allocated_budget, remaining_budget, employee_budget,
             technical_budget, additional_budget, employee_expenses,
             technical_expenses, additional_expenses, actual_expenses, employees_list } = req.body;
+
+        const remainingBudget = allocated_budget;
+
+        const diffInTime = end_date.getTime() - start_date.getTime(); // Difference in milliseconds
+        const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
+        const salary = await axios.post(`http://localhost:3000/api/employees/caluclateSalaries:${employees_list}`);
+        const employeeExpenses = salary.data.total_salary * diffInDays;
+        if (employee_budget > employeeExpenses) {
+            res.status(401).json({ error: "employee budget is exceeded" });
+        }
+
         const projectData = {
             project_id, org_id, client_id, project_name, start_date, end_date, status,
-            total_budget, allocated_budget, remaining_budget, employee_budget,
-            technical_budget, additional_budget, employee_expenses,
+            total_budget, allocated_budget, remaining_budget: remainingBudget, employee_budget,
+            technical_budget, additional_budget, employee_expenses: employeeExpenses,
             technical_expenses, additional_expenses, actual_expenses, employees_list
         };
 
@@ -137,107 +149,109 @@ export const updateProjectStatus = async (req: Request, res: Response) => {
 export const setProjectBudget = async (req: Request, res: Response) => {
     const { project_id } = req.params;
     const { total_budget, employee_budget, technical_budget, additional_budget } = req.body;
-  
+
     try {
-      const project = await Project.findOne({ project_id });
-  
-      if (!project) {
-        res.status(404).json({ error: 'Project not found' });
-        return;
-      }
-  
-      // Update project budgets
-      project.total_budget = total_budget;
-      project.employee_budget = employee_budget;
-      project.technical_budget = technical_budget;
-      project.additional_budget = additional_budget;
-      project.remaining_budget = total_budget - (employee_budget + technical_budget + additional_budget);
-  
-      await project.save();
-  
-      res.status(200).json({ message: 'Budget set successfully', project });
+        const project = await Project.findOne({ project_id });
+
+        if (!project) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+
+        // Update project budgets
+        project.total_budget = total_budget;
+        project.employee_budget = employee_budget;
+        project.technical_budget = technical_budget;
+        project.additional_budget = additional_budget;
+        project.remaining_budget = total_budget - (employee_budget + technical_budget + additional_budget);
+
+        await project.save();
+
+        res.status(200).json({ message: 'Budget set successfully', project });
     } catch (error) {
-      res.status(500).json({ error: `Error setting budget: ${error}` });
+        res.status(500).json({ error: `Error setting budget: ${error}` });
     }
-  };
-  
-  // Get budget details for a project
-  export const getProjectBudget = async (req: Request, res: Response) => {
+};
+
+// Get budget details for a project
+export const getProjectBudget = async (req: Request, res: Response) => {
     const { project_id } = req.params;
-  
+
     try {
-      const project = await Project.findOne(
-        { project_id },
-        'total_budget remaining_budget employee_budget technical_budget additional_budget'
-      );
-  
-      if (!project) {
-        res.status(404).json({ error: 'Project not found' });
-        return;
-      }
-  
-      res.status(200).json(project);
+        const project = await Project.findOne(
+            { project_id },
+            'total_budget remaining_budget employee_budget technical_budget additional_budget'
+        );
+
+        if (!project) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+
+        res.status(200).json(project);
     } catch (error) {
-      res.status(500).json({ error: `Error fetching budget: ${error}` });
+        res.status(500).json({ error: `Error fetching budget: ${error}` });
     }
-  };
-  
-  // Add an expense to the project
-  export const addProjectExpense = async (req: Request, res: Response) => {
+};
+
+// Add an expense to the project
+export const addProjectExpense = async (req: Request, res: Response) => {
     const { project_id } = req.params;
     const { amount, category } = req.body; // category can be "employee", "technical", or "additional"
-  
-    try {
-      const project = await Project.findOne({ project_id });
-  
-      if (!project) {
-        res.status(404).json({ error: 'Project not found' });
-        return;
-      }
-  
-      if (project.remaining_budget < amount) {
-        res.status(400).json({ error: 'Insufficient remaining budget' });
-        return;
-      }
-  
-      // Update expenses and remaining budget
-      project.remaining_budget -= amount;
-      project.actual_expenses += amount;
-      if (category === 'employee') {
-        project.employee_expenses += amount;
-      } else if (category === 'technical') {
-        project.technical_expenses += amount;
-      } else if (category === 'additional') {
-        project.additional_expenses += amount;
-      }
-  
-      await project.save();
-  
-      res.status(200).json({ message: 'Expense added successfully', project });
-    } catch (error) {
-      res.status(500).json({ error: `Error adding expense: ${error}` });
-    }
-  };
-  
-  // Get all expenses for a project
-  export const getProjectExpenses = async (req: Request, res: Response) => {
-    const { project_id } = req.params;
-  
-    try {
-      const project = await Project.findOne(
-        { project_id },
-        'employee_expenses technical_expenses additional_expenses actual_expenses remaining_budget'
-      );
-  
-      if (!project) {
-        res.status(404).json({ error: 'Project not found' });
-        return; 
-      }
-  
-      res.status(200).json(project);
-    } catch (error) {
-      res.status(500).json({ error: `Error fetching expenses: ${error}` });
-    }
-  };
 
-  
+    try {
+        const project = await Project.findOne({ project_id });
+
+        if (!project) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+
+        if (project.remaining_budget < amount) {
+            res.status(400).json({ error: 'Insufficient remaining budget' });
+            return;
+        }
+
+        // Update expenses and remaining budget
+        project.remaining_budget -= amount;
+        project.actual_expenses += amount;
+        if (category === 'employee') {
+            project.employee_expenses += amount;
+        } else if (category === 'technical') {
+            project.technical_expenses += amount;
+        } else if (category === 'additional') {
+            project.additional_expenses += amount;
+        }
+
+        await project.save();
+
+        res.status(200).json({ message: 'Expense added successfully', project });
+    } catch (error) {
+        res.status(500).json({ error: `Error adding expense: ${error}` });
+    }
+};
+
+// Get all expenses for a project
+export const getProjectExpenses = async (req: Request, res: Response) => {
+    const { project_id } = req.params;
+
+    try {
+        const project = await Project.findOne(
+            { project_id },
+            'employee_expenses technical_expenses additional_expenses actual_expenses remaining_budget'
+        );
+
+        if (!project) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+
+        res.status(200).json(project);
+    } catch (error) {
+        res.status(500).json({ error: `Error fetching expenses: ${error}` });
+    }
+};
+
+
+
+

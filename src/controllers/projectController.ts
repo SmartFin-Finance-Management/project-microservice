@@ -6,11 +6,13 @@ export const createProject = async (req: Request, res: Response) => {
     try {
         const { project_id, org_id, client_id, project_name, start_date, end_date, status,
             total_budget, allocated_budget, remaining_budget, employee_budget,
-            technical_budget, additional_budget, actual_expenses, employees_list } = req.body;
+            technical_budget, additional_budget, employee_expenses,
+            technical_expenses, additional_expenses, actual_expenses, employees_list } = req.body;
         const projectData = {
             project_id, org_id, client_id, project_name, start_date, end_date, status,
             total_budget, allocated_budget, remaining_budget, employee_budget,
-            technical_budget, additional_budget, actual_expenses, employees_list
+            technical_budget, additional_budget, employee_expenses,
+            technical_expenses, additional_expenses, actual_expenses, employees_list
         };
 
         const savedProject = await Project.create(projectData);

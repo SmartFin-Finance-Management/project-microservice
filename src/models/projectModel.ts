@@ -15,6 +15,9 @@ interface IProject extends Document {
     employee_budget: number;
     technical_budget: number;
     additional_budget: number;
+    employee_expenses: number;
+    technical_expenses: number;
+    additional_expenses: number;
     actual_expenses: number;
     employees_list: number[];
 }
@@ -34,6 +37,9 @@ const projectSchema = new mongoose.Schema<IProject>({
     employee_budget: { type: Number },
     technical_budget: { type: Number },
     additional_budget: { type: Number },
+    employee_expenses: { type: Number },
+    technical_expenses: { type: Number },
+    additional_expenses: { type: Number },
     actual_expenses: { type: Number },
     employees_list: { type: [Number], default: [] },
 });

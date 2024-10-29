@@ -13,6 +13,7 @@ export const createProject = async (req: Request, res: Response) => {
         const remainingBudget = allocated_budget;
         if (allocated_budget < employee_budget + technical_budget + additional_budget) {
             res.status(400).json({ error: "budget is exceeding the allocated budget" });
+            return;
         }
 
         // Convert start_date and end_date to Date objects

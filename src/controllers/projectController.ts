@@ -25,7 +25,7 @@ export const createProject = async (req: Request, res: Response) => {
         const diffInTime = endDate.getTime() - startDate.getTime();
         const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
 
-        const salary = await axios.post('http://localhost:3000/api/employees/calculateSalaries', {
+        const salary = await axios.post('http://localhost:3000/employees/calculateSalaries', {
             employees_list
         });
         const employeeExpenses = salary.data.total_salary * diffInDays;
@@ -137,12 +137,12 @@ export const updateProjectStatus = async (req: Request, res: Response) => {
             if (req.params.status === "completed") {
                 project.status = "completed";
                 for (const employeeId of project.employees_list) {
-                    await axios.get(`http://localhost:3000/api/employees/projectCompleted/${employeeId}`);
+                    await axios.get(`http://localhost:3000/employees/projectCompleted/${employeeId}`);
                 }
             }
             else if (req.params.status === "ongoing") {
                 for (const employeeId of project.employees_list) {
-                    await axios.get(`http://localhost:3000/api/employees/assignProject/${employeeId}/${req.params.project_id}`);
+                    await axios.get(`http://localhost:3000/employees/assignProject/${employeeId}/${req.params.project_id}`);
                 }
                 project.status = "ongoing";
             }

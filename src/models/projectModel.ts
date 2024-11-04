@@ -6,8 +6,8 @@ interface IProject extends Document {
     org_id: number;
     client_id: number;
     project_name: string;
-    start_date: Date;
-    end_date: Date;
+    start_date: string;
+    end_date: string;
     status: string;
     total_budget: number;
     allocated_budget: number;
@@ -28,8 +28,8 @@ const projectSchema = new mongoose.Schema<IProject>({
     org_id: { type: Number, required: true },
     client_id: { type: Number, required: true },
     project_name: { type: String, required: true },
-    start_date: { type: Date, required: true },
-    end_date: { type: Date },
+    start_date: { type: String, required: true },
+    end_date: { type: String },
     status: { type: String, required: true },
     total_budget: { type: Number, required: true },
     allocated_budget: { type: Number },

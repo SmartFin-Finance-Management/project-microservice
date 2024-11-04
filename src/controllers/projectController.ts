@@ -11,6 +11,7 @@ export const createProject = async (req: Request, res: Response) => {
             technical_expenses, additional_expenses, actual_expenses, employees_list } = req.body;
 
         //validating budget
+        //const list = [1];
         const remainingBudget = allocated_budget;
         if (allocated_budget < employee_budget + technical_budget + additional_budget) {
             res.status(400).json({ error: "budget is exceeding the allocated budget" });
@@ -25,7 +26,7 @@ export const createProject = async (req: Request, res: Response) => {
         const diffInTime = endDate.getTime() - startDate.getTime();
         const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
 
-        const salary = await axios.post('http://localhost:3000/api/employees/calculateSalaries', {
+        const salary = await axios.post('http://localhost:3000/employees/calculateSalaries', {
             employees_list
         });
         const employeeExpenses = salary.data.total_salary * diffInDays;
@@ -92,6 +93,7 @@ export const updateProject = async (req: Request, res: Response) => {
     }
 };
 
+
 export const delteProject = async (req: Request, res: Response) => {
     try {
         const project = await Project.findOneAndDelete({ project_id: req.params.id }, req.body);
@@ -137,12 +139,12 @@ export const updateProjectStatus = async (req: Request, res: Response) => {
             if (req.params.status === "completed") {
                 project.status = "completed";
                 for (const employeeId of project.employees_list) {
-                    await axios.get(`http://localhost:3000/api/employees/projectCompleted/${employeeId}`);
+                    await axios.get(`http://localhost:3000/employees/projectCompleted/${employeeId}`);
                 }
             }
             else if (req.params.status === "ongoing") {
                 for (const employeeId of project.employees_list) {
-                    await axios.get(`http://localhost:3000/api/employees/assignProject/${employeeId}/${req.params.project_id}`);
+                    await axios.get(`http://localhost:3000/employees/assignProject/${employeeId}/${req.params.project_id}`);
                 }
                 project.status = "ongoing";
             }
@@ -325,6 +327,24 @@ export const getMonthlyExpenses = async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'An error occurred while fetching monthly expenses.', error });
+    }
+};
+
+
+export const getMaxProjectId = async (req: Request, res: Response) => {
+    console.log("Fetching max project ID");
+
+    try {
+        const maxProject = await Project.findOne({}, { project_id: 1 })
+            .sort({ project_id: -1 })
+            .limit(1);
+
+        const maxId = maxProject ? maxProject.project_id : 0;
+
+        res.status(200).json({ max_project_id: maxId });
+    } catch (error) {
+        console.error(`Error fetching max project_id: ${error}`);
+        res.status(500).json({ error: `Error fetching maximum project_id: ${error}` });
     }
 };
 

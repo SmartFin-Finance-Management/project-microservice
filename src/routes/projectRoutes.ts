@@ -12,15 +12,17 @@ import {
     getProjectBudget,
     addProjectExpense,
     getProjectExpenses,
-    getProfitLossReport
+    getProfitLossReport,
+    getMaxProjectId
 } from '../controllers/projectController';
 
 const router = Router();
 
 router.get('/projects', getAll);
+router.get('/projects/getUniqueId', getMaxProjectId);
 router.get('/projects/:id', getProjectById);
 router.post('/projects', createProject);
-router.put('/projects', updateProject);
+router.put('/projects/:id', updateProject);
 router.delete('/projects/:id', delteProject);
 router.get('/projects/orgs/:org_id', getProjectsByOrgId);
 router.get('/projects/client/:client_id', getProjectsByClientId);

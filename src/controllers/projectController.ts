@@ -53,6 +53,7 @@ export const createProject = async (req: Request, res: Response) => {
     }
 };
 
+
 export const getProjectById = async (req: Request, res: Response) => {
     try {
         const project = await Project.findOne({ project_id: req.params.id });

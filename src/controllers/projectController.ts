@@ -9,14 +9,15 @@ export const createProject = async (req: Request, res: Response) => {
             total_budget, allocated_budget, remaining_budget, employee_budget,
             technical_budget, additional_budget, employee_expenses,
             technical_expenses, additional_expenses, actual_expenses, employees_list } = req.body;
-
         //validating budget
         //const list = [1];
         const remainingBudget = allocated_budget;
         if (allocated_budget < employee_budget + technical_budget + additional_budget) {
+            console.log("chetan");
             res.status(400).json({ error: "budget is exceeding the allocated budget" });
             return;
         }
+        console.log("2");
 
         // Convert start_date and end_date to Date objects
         const startDate = new Date(start_date);
@@ -41,6 +42,7 @@ export const createProject = async (req: Request, res: Response) => {
             technical_budget, additional_budget, employee_expenses: employeeExpenses,
             technical_expenses, additional_expenses, actual_expenses, employees_list
         };
+        console.log(projectData);
 
         const savedProject = await Project.create(projectData);
 
@@ -94,17 +96,24 @@ export const updateProject = async (req: Request, res: Response) => {
 };
 
 
-export const delteProject = async (req: Request, res: Response) => {
+export const deleteProject = async (req: Request, res: Response) => {
     try {
-        const project = await Project.findOneAndDelete({ project_id: req.params.id }, req.body);
-        if (!project)
+        const project = await Project.findOneAndDelete({ project_id: req.params.id });
+
+        if (!project) {
+            // Send 404 response and return to avoid further execution
             res.status(404).json({ message: "Project not found" });
-        res.status(200).json({ message: "Project deleted Successfully!" })
+            return;
+        }
+
+        // Send success response if project was deleted
+        res.status(200).json({ message: "Project deleted successfully!" });
+    } catch (error) {
+        // Send 500 response if there's an error
+        res.status(500).json({ message: "An unexpected error occurred" });
     }
-    catch (error) {
-        res.status(500).json({ message: 'An unexpected error occured' });
-    }
-}
+};
+
 
 export const getProjectsByOrgId = async (req: Request, res: Response) => {
     try {

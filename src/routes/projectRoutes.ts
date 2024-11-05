@@ -4,7 +4,7 @@ import {
     getProjectById,
     getAll,
     updateProject,
-    delteProject,
+    deleteProject,
     getProjectsByOrgId,
     getProjectsByClientId,
     updateProjectStatus,
@@ -23,7 +23,7 @@ router.get('/projects/getUniqueId', getMaxProjectId);
 router.get('/projects/:id', getProjectById);
 router.post('/projects', createProject);
 router.put('/projects/:id', updateProject);
-router.delete('/projects/:id', delteProject);
+router.delete('/projects/:id', deleteProject);
 router.get('/projects/orgs/:org_id', getProjectsByOrgId);
 router.get('/projects/client/:client_id', getProjectsByClientId);
 router.put('/projects/:project_id/:status', updateProjectStatus);

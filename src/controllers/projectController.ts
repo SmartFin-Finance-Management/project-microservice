@@ -13,36 +13,16 @@ export const createProject = async (req: Request, res: Response) => {
         //const list = [1];
         const remainingBudget = allocated_budget;
         if (allocated_budget < employee_budget + technical_budget + additional_budget) {
-            console.log("chetan");
             res.status(400).json({ error: "budget is exceeding the allocated budget" });
-            return;
-        }
-        console.log("2");
-
-        // Convert start_date and end_date to Date objects
-        const startDate = new Date(start_date);
-        const endDate = new Date(end_date);
-
-        // Calculate the difference in days
-        const diffInTime = endDate.getTime() - startDate.getTime();
-        const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
-
-        const salary = await axios.post('http://localhost:3000/employees/calculateSalaries', {
-            employees_list
-        });
-        const employeeExpenses = salary.data.total_salary * diffInDays;
-        if (employee_budget < employeeExpenses) {
-            res.status(400).json({ error: "employee budget is exceeded" });
             return;
         }
 
         const projectData = {
             project_id, org_id, client_id, project_name, start_date, end_date, status,
             total_budget, allocated_budget, remaining_budget: remainingBudget, employee_budget,
-            technical_budget, additional_budget, employee_expenses: employeeExpenses,
+            technical_budget, additional_budget, employee_expenses,
             technical_expenses, additional_expenses, actual_expenses, employees_list
         };
-        console.log(projectData);
 
         const savedProject = await Project.create(projectData);
 
@@ -59,6 +39,7 @@ export const getProjectById = async (req: Request, res: Response) => {
         const project = await Project.findOne({ project_id: req.params.id });
         if (!project) {
             res.status(404).json({ message: 'Project not found' });
+            return;
         }
         // const response = await axios.get(`http://localhost:3000/api/employees/projects/${req.params.id}`);
         // if (project !== null) {
@@ -358,3 +339,53 @@ export const getMaxProjectId = async (req: Request, res: Response) => {
     }
 };
 
+
+export const updateEmployees = async (req: Request, res: Response) => {
+    try {
+        const projectId = req.params.projectId;
+        const project = await Project.findOne({ project_id: projectId });
+        console.log(project)
+        console.log("body" + JSON.stringify(req.body));
+
+        const employeeList: number[] = req.body;
+
+        console.log("employeeList" + employeeList);
+        if (!project) {
+            res.status(400).json({ message: "Project not found" });
+            return;
+        }
+
+        project.employees_list = employeeList;
+
+        const List = project.employees_list;
+
+        console.log(List);
+        // Convert start_date and end_date to Date objects
+        const startDate = new Date(project.start_date);
+        const endDate = new Date(project.end_date);
+
+        // Calculate the difference in days
+        const diffInTime = endDate.getTime() - startDate.getTime();
+        const diffInDays = Math.ceil(diffInTime / (1000 * 60 * 60 * 24));
+        const salary = await axios.post('http://localhost:3000/employees/calculateSalaries', {
+            List
+        });
+        console.log(salary);
+        const employeeExpenses = salary.data.total_salary * diffInDays;
+        if (project.employee_budget < employeeExpenses) {
+            res.status(400).json({ message: "employee budget is exceeded" });
+            return;
+        }
+        console.log(project);
+
+        const updatedProject = await Project.findOneAndUpdate(
+            { project_id: projectId },
+            project,
+            { new: true, runValidators: true }  // Returns the updated document
+        );
+
+        res.status(200).json(updatedProject);
+    } catch (error) {
+        res.status(500).json({ message: "An error occurred while updating employees.", error });
+    }
+};

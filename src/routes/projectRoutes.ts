@@ -13,7 +13,8 @@ import {
     addProjectExpense,
     getProjectExpenses,
     getProfitLossReport,
-    getMaxProjectId
+    getMaxProjectId,
+    updateEmployees
 } from '../controllers/projectController';
 
 const router = Router();
@@ -26,7 +27,10 @@ router.put('/projects/:id', updateProject);
 router.delete('/projects/:id', deleteProject);
 router.get('/projects/orgs/:org_id', getProjectsByOrgId);
 router.get('/projects/client/:client_id', getProjectsByClientId);
+router.put('/projects/:projectId/employees', updateEmployees)
 router.put('/projects/:project_id/:status', updateProjectStatus);
+
+
 
 // Budget Management
 router.post('/projects/:project_id/budget', setProjectBudget);

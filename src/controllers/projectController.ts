@@ -389,7 +389,15 @@ export const updateEmployees = async (req: Request, res: Response) => {
 
         const List = project.employees_list;
         if (List.length == 0) {
-            console.log("ananthu");
+            project.employees_list = [];
+            const updatedProject = await Project.findOneAndUpdate(
+                { project_id: projectId },
+                project,
+                { new: true, runValidators: true }  // Returns the updated document
+            );
+
+            res.status(200).json(updatedProject);
+            //console.log("ananthu");
             return;
         }
 

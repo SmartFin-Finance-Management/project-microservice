@@ -144,6 +144,7 @@ export const getProjectsByClientId = async (req: Request, res: Response) => {
     }
 }
 
+
 export const updateProjectStatus = async (req: Request, res: Response) => {
     try {
         const project = await Project.findOne({ project_id: req.params.project_id });

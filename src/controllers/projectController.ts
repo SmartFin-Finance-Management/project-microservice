@@ -64,16 +64,33 @@ export const updateProject = async (req: Request, res: Response) => {
         const project = await Project.findOne({ project_id: req.params.id });
         if (!project)
             res.status(404).json({ message: 'Project not found' });
-        const updatedProject = await Project.findOneAndUpdate(
-            { project_id: req.params.id },
-            req.body,
-            { new: true, runValidators: true }  // Returns the updated document
-        );
+        if (project !== null) {
+            if (req.body.status === "completed") {
+                project.status = "completed";
+                for (const employeeId of project.employees_list) {
+                    await axios.get(`http://localhost:3000/employees/projectCompleted/${employeeId}`);
+                }
+            }
+            else if (req.body.status === "ongoing") {
+                const project_id = req.params.id;
+                //console.log(project_id);
+                for (const employeeId of project.employees_list) {
+                    await axios.get(`http://localhost:3000/employees/assignProject/${employeeId}/${project_id}`);
+                }
 
-        res.status(200).json(updatedProject);
+                project.status = "ongoing";
+            }
+            const updatedProject = await Project.findOneAndUpdate(
+                { project_id: req.params.id },
+                req.body,
+                { new: true, runValidators: true }  // Returns the updated document
+            );
+
+            res.status(200).json(updatedProject);
+        }
     }
     catch (error) {
-        res.status(500).json({ message: 'An unexpected error occured' });
+        res.status(500).json({ message: 'An unexpected error occured' + error });
     }
 };
 

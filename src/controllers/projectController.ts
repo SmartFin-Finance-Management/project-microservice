@@ -323,6 +323,7 @@ export const getMonthlyExpenses = async (req: Request, res: Response) => {
 
         if (!expenses) {
             return res.status(404).json({ message: 'Project not found' });
+
         }
 
         // Here, you should have a mechanism to track and store monthly expenses.

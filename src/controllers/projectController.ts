@@ -367,11 +367,11 @@ export const updateEmployees = async (req: Request, res: Response) => {
     try {
         const projectId = req.params.projectId;
         const project = await Project.findOne({ project_id: projectId });
-        console.log(project)
+        //console.log(project)
         console.log("body" + JSON.stringify(req.body));
-
+        console.log("ananthu");
         const employeeList: number[] = req.body;
-
+        console.log("ananthu11");
         console.log("employeeList" + employeeList);
         if (!project) {
             res.status(400).json({ message: "Project not found" });
@@ -381,8 +381,12 @@ export const updateEmployees = async (req: Request, res: Response) => {
         project.employees_list = employeeList;
 
         const List = project.employees_list;
+        if (List.length == 0) {
+            console.log("ananthu");
+            return;
+        }
 
-        console.log(List);
+        console.log("chetan");
         // Convert start_date and end_date to Date objects
         const startDate = new Date(project.start_date);
         const endDate = new Date(project.end_date);
@@ -393,13 +397,13 @@ export const updateEmployees = async (req: Request, res: Response) => {
         const salary = await axios.post('http://localhost:3000/employees/calculateSalaries', {
             List
         });
-        console.log(salary);
+        // console.log(salary);
         const employeeExpenses = salary.data.total_salary * diffInDays;
         if (project.employee_budget < employeeExpenses) {
             res.status(400).json({ message: "employee budget is exceeded" });
             return;
         }
-        console.log(project);
+        //console.log(project);
 
         const updatedProject = await Project.findOneAndUpdate(
             { project_id: projectId },

@@ -11,16 +11,11 @@ export const createProject = async (req: Request, res: Response) => {
             technical_expenses, additional_expenses, actual_expenses, employees_list } = req.body;
         //validating budget
         //const list = [1];
-        if (total_budget < allocated_budget) {
-            res.status(400).json({ error: "allocated_budget is exceeding the total budget" });
+        if (total_budget < allocated_budget || employee_budget > allocated_budget) {
+            res.status(400).json({ error: "exceeding the budget" });
             return;
         }
         const remainingBudget = allocated_budget;
-        if (allocated_budget < employee_budget + technical_budget + additional_budget) {
-            res.status(400).json({ error: "budget is exceeding the allocated budget" });
-            return;
-        }
-
         const projectData = {
             project_id, org_id, client_id, project_name, start_date, end_date, status,
             total_budget, allocated_budget, remaining_budget: remainingBudget, employee_budget,
@@ -66,22 +61,32 @@ export const getAll = async (req: Request, res: Response) => {
 export const updateProject = async (req: Request, res: Response) => {
     try {
         const project = await Project.findOne({ project_id: req.params.id });
+
         if (!project)
             res.status(404).json({ message: 'Project not found' });
+
+        if (req.body.allocated_budget < req.body.employee_budget + req.body.technical_budget + req.body.additional_budget) {
+            res.status(400).json({ error: "budget is exceeding the allocated budget" });
+            return;
+        }
+
         if (project !== null) {
             if (req.body.status === "completed") {
-                project.status = "completed";
-                for (const employeeId of project.employees_list) {
-                    console.log(employeeId);
-                    await axios.get(`http://localhost:3000/employees/projectCompleted/${employeeId}`);
+                if (project.employees_list.length !== 0) {
+                    for (const employeeId of project.employees_list) {
+                        console.log(employeeId);
+                        await axios.get(`http://localhost:3000/employees/projectCompleted/${employeeId}`);
+                    }
                 }
                 project.status = "completed";
             }
             else if (req.body.status === "ongoing") {
                 const project_id = req.params.id;
                 //console.log(project_id);
-                for (const employeeId of project.employees_list) {
-                    await axios.get(`http://localhost:3000/employees/assignProject/${employeeId}/${project_id}`);
+                if (project.employees_list.length !== 0) {
+                    for (const employeeId of project.employees_list) {
+                        await axios.get(`http://localhost:3000/employees/assignProject/${employeeId}/${project_id}`);
+                    }
                 }
 
                 project.status = "ongoing";

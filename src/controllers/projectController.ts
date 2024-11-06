@@ -13,6 +13,7 @@ export const createProject = async (req: Request, res: Response) => {
         //const list = [1];
         if (total_budget < allocated_budget) {
             res.status(400).json({ error: "allocated_budget is exceeding the total budget" });
+            return;
         }
         const remainingBudget = allocated_budget;
         if (allocated_budget < employee_budget + technical_budget + additional_budget) {
